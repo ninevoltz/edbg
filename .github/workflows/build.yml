@@ -5,9 +5,13 @@ on:
   push:
   pull_request:
 
+env:
+  CD_AUTH: ${{secrets.CD_AUTH}}
+  CD_SERVER: ${{secrets.CD_SERVER}}
+
 jobs:
   build-windows:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       COMPILER: x86_64-w64-mingw32-gcc -Iomicron/external/include/ddk
       UNAME: Windows
@@ -31,21 +35,22 @@ jobs:
           ls -r .
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: edbg-windows
           path: edbg.exe
 
       - name: Upload Binary
+        if: "${{ env.CD_AUTH != '' }}"
         run: |
-          RESPONSE=`curl -T edbg.exe -u${{secrets.CD_AUTH}} ${{secrets.CD_SERVER}}/edbg/${{github.run_number}}/edbg-windows-r${{github.run_number}}.exe`
+          RESPONSE=`curl -T edbg.exe -u${{env.CD_AUTH}} ${{env.CD_SERVER}}/edbg/${{github.run_number}}/edbg-windows-r${{github.run_number}}.exe`
           if [ 'OK' != "${RESPONSE}" ]; then
             echo "Depolyment to failed with response ${RESPONSE}";
             exit 1;
           fi
 
   build-linux:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout
         uses: actions/checkout@v1
@@ -64,14 +69,15 @@ jobs:
           ls -r .
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: edbg-linux
           path: edbg
 
       - name: Upload Binary
+        if: "${{ env.CD_AUTH != '' }}"
         run: |
-          RESPONSE=`curl -T edbg -u${{secrets.CD_AUTH}} ${{secrets.CD_SERVER}}/edbg/${{github.run_number}}/edbg-linux-r${{github.run_number}}`
+          RESPONSE=`curl -T edbg -u${{env.CD_AUTH}} ${{env.CD_SERVER}}/edbg/${{github.run_number}}/edbg-linux-r${{github.run_number}}`
           if [ 'OK' != "${RESPONSE}" ]; then
             echo "Depolyment to failed with response ${RESPONSE}";
             exit 1;
@@ -83,15 +89,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
 
-      - name: Install Requirements
-        run: |
-          brew install hidapi;
-
-      - name: Check requirements
-        run: |
-          brew list --versions hidapi
-          brew info hidapi
-
       - name: Compile
         run: |
           make all
@@ -101,14 +98,15 @@ jobs:
           ls -r .
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: edbg-macos
           path: edbg
 
       - name: Upload Binary
+        if: "${{ env.CD_AUTH != '' }}"
         run: |
-          RESPONSE=`curl -T edbg -u${{secrets.CD_AUTH}} ${{secrets.CD_SERVER}}/edbg/${{github.run_number}}/edbg-mac-r${{github.run_number}}`
+          RESPONSE=`curl -T edbg -u${{env.CD_AUTH}} ${{env.CD_SERVER}}/edbg/${{github.run_number}}/edbg-mac-r${{github.run_number}}`
           if [ 'OK' != "${RESPONSE}" ]; then
             echo "Depolyment to failed with response ${RESPONSE}";
             exit 1;

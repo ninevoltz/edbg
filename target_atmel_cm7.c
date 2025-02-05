@@ -1,30 +1,5 @@
-/*
- * Copyright (c) 2013-2019, Alex Taradov <alex@taradov.com>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2013-2019, Alex Taradov <alex@taradov.com>. All rights reserved.
 
 /*- Includes ----------------------------------------------------------------*/
 #include <stdlib.h>
@@ -73,6 +48,9 @@
 #define GPNVM_SIZE             2
 #define GPNVM_SIZE_BITS        9
 
+#define DEVICE_ID_MASK         0xfffffff0
+#define DEVICE_REV_MASK        0xf
+
 /*- Types -------------------------------------------------------------------*/
 typedef struct
 {
@@ -83,52 +61,45 @@ typedef struct
   uint32_t  flash_size;
 } device_t;
 
-
 /*- Variables ---------------------------------------------------------------*/
 static device_t devices[] =
 {
-  { 0xa1020e00, 0x00000002, "same70", "SAM E70Q21",          2*1024*1024 },
-  { 0xa1020e01, 0x00000002, "same70", "SAM E70Q21 (Rev B)",  2*1024*1024 },
-  { 0xa1020c00, 0x00000002, "same70", "SAM E70Q20",            1024*1024 },
-  { 0xa10d0a00, 0x00000002, "same70", "SAM E70Q19",             512*1024 },
-  { 0xa10d0a01, 0x00000002, "same70", "SAM E70Q19 (Rev B)",     512*1024 },
-  { 0xa1020e00, 0x00000001, "same70", "SAM E70N21",          2*1024*1024 },
-  { 0xa1020e01, 0x00000001, "same70", "SAM E70N21 (Rev B)",  2*1024*1024 },
-  { 0xa1020c00, 0x00000001, "same70", "SAM E70N20",            1024*1024 },
-  { 0xa1020c01, 0x00000001, "same70", "SAM E70N20 (Rev B)",    1024*1024 },
-  { 0xa10d0a00, 0x00000001, "same70", "SAM E70N19",             512*1024 },
-  { 0xa1020e00, 0x00000000, "same70", "SAM E70J21",          2*1024*1024 },
-  { 0xa1020c00, 0x00000000, "same70", "SAM E70J20",            1024*1024 },
-  { 0xa10d0a00, 0x00000000, "same70", "SAM E70J19",             512*1024 },
-  { 0xa1120e00, 0x00000002, "sams70", "SAM S70Q21",          2*1024*1024 },
-  { 0xa1120c00, 0x00000002, "sams70", "SAM S70Q20",            1024*1024 },
-  { 0xa11d0a00, 0x00000002, "sams70", "SAM S70Q19",             512*1024 },
-  { 0xa1120e00, 0x00000001, "sams70", "SAM S70N21",          2*1024*1024 },
-  { 0xa1120c00, 0x00000001, "sams70", "SAM S70N20",            1024*1024 },
-  { 0xa11d0a00, 0x00000001, "sams70", "SAM S70N19",             512*1024 },
-  { 0xa1120e00, 0x00000000, "sams70", "SAM S70J21",          2*1024*1024 },
-  { 0xa1120c00, 0x00000000, "sams70", "SAM S70J20",            1024*1024 },
-  { 0xa11d0a00, 0x00000000, "sams70", "SAM S70J19",             512*1024 },
-  { 0xa1220e00, 0x00000002, "samv71", "SAM V71Q21",          2*1024*1024 },
-  { 0xa1220e01, 0x00000002, "samv71", "SAM V71Q21 (Rev B)",  2*1024*1024 },
-  { 0xa1220c00, 0x00000002, "samv71", "SAM V71Q20",            1024*1024 },
-  { 0xa1320c01, 0x00000002, "samv71", "SAM V71Q20 (Rev B)",    1024*1024 },
-  { 0xa12d0a00, 0x00000002, "samv71", "SAM V71Q19",             512*1024 },
-  { 0xa1220e00, 0x00000001, "samv71", "SAM V71N21",          2*1024*1024 },
-  { 0xa1220e01, 0x00000001, "samv71", "SAM V71N21 (Rev B)",  2*1024*1024 },
-  { 0xa1220c00, 0x00000001, "samv71", "SAM V71N20",            1024*1024 },
-  { 0xa1220c01, 0x00000001, "samv71", "SAM V71N20 (Rev B)",    1024*1024 },
-  { 0xa12d0a00, 0x00000001, "samv71", "SAM V71N19",             512*1024 },
-  { 0xa12d0a01, 0x00000001, "samv71", "SAM V71N19 (Rev B)",     512*1024 },
-  { 0xa1220e00, 0x00000000, "samv71", "SAM V71J21",          2*1024*1024 },
-  { 0xa1220c00, 0x00000000, "samv71", "SAM V71J20",            1024*1024 },
-  { 0xa12d0a00, 0x00000000, "samv71", "SAM V71J19",             512*1024 },
-  { 0xa1320c00, 0x00000002, "samv70", "SAM V70Q20",            1024*1024 },
-  { 0xa13d0a00, 0x00000002, "samv70", "SAM V70Q19",             512*1024 },
-  { 0xa1320c00, 0x00000001, "samv70", "SAM V70N20",            1024*1024 },
-  { 0xa13d0a00, 0x00000001, "samv70", "SAM V70N19",             512*1024 },
-  { 0xa1320c00, 0x00000000, "samv70", "SAM V70J20",            1024*1024 },
-  { 0xa13d0a00, 0x00000000, "samv70", "SAM V70J19",             512*1024 },
+  { 0xa10d0a00, 0x00000002, "same70", "SAM E70Q19",    512*1024 },
+  { 0xa1020c00, 0x00000002, "same70", "SAM E70Q20",   1024*1024 },
+  { 0xa1020e00, 0x00000002, "same70", "SAM E70Q21", 2*1024*1024 },
+  { 0xa10d0a00, 0x00000001, "same70", "SAM E70N19",    512*1024 },
+  { 0xa1020c00, 0x00000001, "same70", "SAM E70N20",   1024*1024 },
+  { 0xa1020e00, 0x00000001, "same70", "SAM E70N21", 2*1024*1024 },
+  { 0xa10d0a00, 0x00000000, "same70", "SAM E70J19",    512*1024 },
+  { 0xa1020c00, 0x00000000, "same70", "SAM E70J20",   1024*1024 },
+  { 0xa1020e00, 0x00000000, "same70", "SAM E70J21", 2*1024*1024 },
+
+  { 0xa11d0a00, 0x00000002, "sams70", "SAM S70Q19",    512*1024 },
+  { 0xa1120c00, 0x00000002, "sams70", "SAM S70Q20",   1024*1024 },
+  { 0xa1120e00, 0x00000002, "sams70", "SAM S70Q21", 2*1024*1024 },
+  { 0xa11d0a00, 0x00000001, "sams70", "SAM S70N19",    512*1024 },
+  { 0xa1120c00, 0x00000001, "sams70", "SAM S70N20",   1024*1024 },
+  { 0xa1120e00, 0x00000001, "sams70", "SAM S70N21", 2*1024*1024 },
+  { 0xa11d0a00, 0x00000000, "sams70", "SAM S70J19",    512*1024 },
+  { 0xa1120c00, 0x00000000, "sams70", "SAM S70J20",   1024*1024 },
+  { 0xa1120e00, 0x00000000, "sams70", "SAM S70J21", 2*1024*1024 },
+
+  { 0xa13d0a00, 0x00000002, "samv70", "SAM V70Q19",    512*1024 },
+  { 0xa1320c00, 0x00000002, "samv70", "SAM V70Q20",   1024*1024 },
+  { 0xa13d0a00, 0x00000001, "samv70", "SAM V70N19",    512*1024 },
+  { 0xa1320c00, 0x00000001, "samv70", "SAM V70N20",   1024*1024 },
+  { 0xa13d0a00, 0x00000000, "samv70", "SAM V70J19",    512*1024 },
+  { 0xa1320c00, 0x00000000, "samv70", "SAM V70J20",   1024*1024 },
+
+  { 0xa12d0a00, 0x00000002, "samv71", "SAM V71Q19",    512*1024 },
+  { 0xa1220c00, 0x00000002, "samv71", "SAM V71Q20",   1024*1024 },
+  { 0xa1220e00, 0x00000002, "samv71", "SAM V71Q21", 2*1024*1024 },
+  { 0xa12d0a00, 0x00000001, "samv71", "SAM V71N19",    512*1024 },
+  { 0xa1220c00, 0x00000001, "samv71", "SAM V71N20",   1024*1024 },
+  { 0xa1220e00, 0x00000001, "samv71", "SAM V71N21", 2*1024*1024 },
+  { 0xa12d0a00, 0x00000000, "samv71", "SAM V71J19",    512*1024 },
+  { 0xa1220c00, 0x00000000, "samv71", "SAM V71J20",   1024*1024 },
+  { 0xa1220e00, 0x00000000, "samv71", "SAM V71J21", 2*1024*1024 },
 };
 
 static device_t target_device;
@@ -139,7 +110,7 @@ static target_options_t target_options;
 //-----------------------------------------------------------------------------
 static void target_select(target_options_t *options)
 {
-  uint32_t chip_id, chip_exid;
+  uint32_t chip_id, chip_exid, id, rev;
 
   dap_reset_link();
 
@@ -153,14 +124,17 @@ static void target_select(target_options_t *options)
   chip_id = dap_read_word(CHIPID_CIDR);
   chip_exid = dap_read_word(CHIPID_EXID);
 
+  id  = chip_id & DEVICE_ID_MASK;
+  rev = chip_id & DEVICE_REV_MASK;
+
   for (int i = 0; i < ARRAY_SIZE(devices); i++)
   {
     uint32_t fl_id, fl_size, fl_page_size, fl_nb_palne, fl_nb_lock;
 
-    if (devices[i].chip_id != chip_id || devices[i].chip_exid != chip_exid)
+    if (devices[i].chip_id != id || devices[i].chip_exid != chip_exid)
       continue;
 
-    verbose("Target: %s\n", devices[i].name);
+    verbose("Target: %s (Rev %c)\n", devices[i].name, 'A' + rev);
 
     dap_write_word(EEFC_FCR, CMD_GETD);
     while (0 == (dap_read_word(EEFC_FSR) & FSR_FRDY));

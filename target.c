@@ -1,30 +1,5 @@
-/*
- * Copyright (c) 2013-2019, Alex Taradov <alex@taradov.com>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2013-2022, Alex Taradov <alex@taradov.com>. All rights reserved.
 
 /*- Includes ----------------------------------------------------------------*/
 #include <string.h>
@@ -58,19 +33,23 @@ extern target_ops_t target_st_stm32g0_ops;
 extern target_ops_t target_gd_gd32f4xx_ops;
 extern target_ops_t target_nu_m480_ops;
 extern target_ops_t target_lattice_lcmxo2_ops;
+extern target_ops_t target_rpi_rp2040_ops;
+extern target_ops_t target_puya_py32f0_ops;
 
 static target_t targets[] =
 {
-  { "atmel_cm0p",	"Atmel SAM C/D/L/R series",		&target_atmel_cm0p_ops },
-  { "atmel_cm3",	"Atmel SAM3X/A/U series",		&target_atmel_cm3_ops },
-  { "atmel_cm4",	"Atmel SAM G and SAM4 series",		&target_atmel_cm4_ops },
-  { "atmel_cm7",	"Atmel SAM E7x/S7x/V7x series",		&target_atmel_cm7_ops },
-  { "atmel_cm4v2",	"Atmel SAM D5x/E5x",			&target_atmel_cm4v2_ops },
-  { "mchp_cm23",	"Microchip SAM L10/L11",		&target_mchp_cm23_ops },
-  { NULL,		"STMicroelectronics STM32G0 series",	&target_st_stm32g0_ops },
-  { NULL,		"GigaDevice GD32F4xx series",		&target_gd_gd32f4xx_ops },
-  { NULL,		"Nuvoton M480 series",			&target_nu_m480_ops },
-  { NULL,		"Lattice LCMXO2 series",		&target_lattice_lcmxo2_ops },
+  { "atmel_cm0p",	"Atmel SAM C/D/L/R, PIC32CM MC",			&target_atmel_cm0p_ops },
+  { "atmel_cm3",	"Atmel SAM3X/A/U",					&target_atmel_cm3_ops },
+  { "atmel_cm4",	"Atmel SAM G and SAM4",					&target_atmel_cm4_ops },
+  { "atmel_cm7",	"Atmel SAM E7x/S7x/V7x",				&target_atmel_cm7_ops },
+  { "atmel_cm4v2",	"Atmel SAM D5x/E5x",					&target_atmel_cm4v2_ops },
+  { "mchp_cm23",	"Microchip SAM L10/L11, PIC32CM LE00/LS00/LS60",	&target_mchp_cm23_ops },
+  { NULL,		"STMicroelectronics STM32G0",				&target_st_stm32g0_ops },
+  { NULL,		"GigaDevice GD32F4xx",					&target_gd_gd32f4xx_ops },
+  { NULL,		"Nuvoton M480",						&target_nu_m480_ops },
+  { NULL,		"Lattice LCMXO2",					&target_lattice_lcmxo2_ops },
+  { NULL,		"Raspberry Pi RP2040 (external flash)", 		&target_rpi_rp2040_ops },
+  { NULL,		"Puya PY32F0xx", 					&target_puya_py32f0_ops },
 };
 
 /*- Implementations ---------------------------------------------------------*/

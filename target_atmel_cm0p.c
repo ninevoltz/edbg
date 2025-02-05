@@ -1,30 +1,5 @@
-/*
- * Copyright (c) 2013-2019, Alex Taradov <alex@taradov.com>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2013-2019, Alex Taradov <alex@taradov.com>. All rights reserved.
 
 /*- Includes ----------------------------------------------------------------*/
 #include <unistd.h>
@@ -123,24 +98,94 @@ static device_t devices[] =
   { 0x10001005, "samd20", "SAM D20G18A",  256*1024 },
   { 0x10001000, "samd20", "SAM D20J18A",  256*1024 },
 
+  { 0x10010003, "samd21", "SAM D21J15A",   32*1024 },
+  { 0x10010008, "samd21", "SAM D21G15A",   32*1024 },
   { 0x1001000d, "samd21", "SAM D21E15A",   32*1024 },
+  { 0x10011021, "samd21", "SAM D21J15B",   32*1024 },
+  { 0x10011024, "samd21", "SAM D21G15B",   32*1024 },
   { 0x10011027, "samd21", "SAM D21E15B",   32*1024 },
+  { 0x10011056, "samd21", "SAM D21E15BU",  32*1024 },
   { 0x1001103f, "samd21", "SAM D21E15L",   32*1024 },
-  { 0x1001000b, "samd21", "SAM D21E17A",  128*1024 },
+  { 0x10011063, "samd21", "SAM D21E15CU",  32*1024 },
+  { 0x10010002, "samd21", "SAM D21J16A",   64*1024 },
+  { 0x10010007, "samd21", "SAM D21G16A",   64*1024 },
+  { 0x1001000c, "samd21", "SAM D21E16A",   64*1024 },
   { 0x10011020, "samd21", "SAM D21J16B",   64*1024 },
-  { 0x10012092, "samd21", "SAM D21J17D",  128*1024 },
+  { 0x10011023, "samd21", "SAM D21G16B",   64*1024 },
+  { 0x10011026, "samd21", "SAM D21E16B",   64*1024 },
+  { 0x10011055, "samd21", "SAM D21E16BU",  64*1024 },
+  { 0x10011057, "samd21", "SAM D21G16L",   64*1024 },
+  { 0x1001103e, "samd21", "SAM D21E16L",   64*1024 },
+  { 0x10011062, "samd21", "SAM D21E16CU",  64*1024 },
   { 0x10010001, "samd21", "SAM D21J17A",  128*1024 },
-  { 0x10010000, "samd21", "SAM D21J18A",  256*1024 },
-  { 0x1001000a, "samd21", "SAM D21E18A",  256*1024 },
   { 0x10010006, "samd21", "SAM D21G17A",  128*1024 },
+  { 0x10010010, "samd21", "SAM D21G17AU", 128*1024 },
+  { 0x1001000b, "samd21", "SAM D21E17A",  128*1024 },
+  { 0x10012094, "samd21", "SAM D21E17D",  128*1024 },
+  { 0x10012095, "samd21", "SAM D21E17DU", 128*1024 },
+  { 0x10012097, "samd21", "SAM D21E17L",  128*1024 },
+  { 0x10012093, "samd21", "SAM D21G17D",  128*1024 },
+  { 0x10012096, "samd21", "SAM D21G17L",  128*1024 },
+  { 0x10012092, "samd21", "SAM D21J17D",  128*1024 },
+  { 0x10010000, "samd21", "SAM D21J18A",  256*1024 },
   { 0x10010005, "samd21", "SAM D21G18A",  256*1024 },
+  { 0x1001000f, "samd21", "SAM D21G18AU", 256*1024 },
+  { 0x1001000a, "samd21", "SAM D21E18A",  256*1024 },
 
-  { 0x11010000, "samc21", "SAM C21J18A",  256*1024 },
-  { 0x11010005, "samc21", "SAM C21G18A",  256*1024 },
+  { 0x10011031, "samda1", "SAM DA1E14A",   16*1024 },
+  { 0x1001102e, "samda1", "SAM DA1G14A",   16*1024 },
+  { 0x1001102b, "samda1", "SAM DA1J14A",   16*1024 },
+  { 0x1001106c, "samda1", "SAM DA1E14B",   16*1024 },
+  { 0x10011069, "samda1", "SAM DA1G14B",   16*1024 },
+  { 0x10011066, "samda1", "SAM DA1J14B",   16*1024 },
+  { 0x10011030, "samda1", "SAM DA1E15A",   32*1024 },
+  { 0x1001102d, "samda1", "SAM DA1G15A",   32*1024 },
+  { 0x1001102a, "samda1", "SAM DA1J15A",   32*1024 },
+  { 0x1001106b, "samda1", "SAM DA1E15B",   32*1024 },
+  { 0x10011068, "samda1", "SAM DA1G15B",   32*1024 },
+  { 0x10011065, "samda1", "SAM DA1J15B",   32*1024 },
+  { 0x1001102f, "samda1", "SAM DA1E16A",   64*1024 },
+  { 0x1001102c, "samda1", "SAM DA1G16A",   64*1024 },
+  { 0x10011029, "samda1", "SAM DA1J16A",   64*1024 },
+  { 0x1001106a, "samda1", "SAM DA1E16B",   64*1024 },
+  { 0x10011067, "samda1", "SAM DA1G16B",   64*1024 },
+  { 0x10011064, "samda1", "SAM DA1J16B",   64*1024 },
+
+  { 0x1100000d, "samc20", "SAM C20E15A",   32*1024 },
+  { 0x11000008, "samc20", "SAM C20G15A",   32*1024 },
+  { 0x11000003, "samc20", "SAM C20J15A",   32*1024 },
+  { 0x1100000c, "samc20", "SAM C20E16A",   64*1024 },
+  { 0x11000007, "samc20", "SAM C20G16A",   64*1024 },
+  { 0x11000002, "samc20", "SAM C20J16A",   64*1024 },
+  { 0x1100000b, "samc20", "SAM C20E17A",  128*1024 },
+  { 0x11000006, "samc20", "SAM C20G17A",  128*1024 },
+  { 0x11000001, "samc20", "SAM C20J17A",  128*1024 },
+  { 0x11000010, "samc20", "SAM C20J17AU", 128*1024 },
+  { 0x11001021, "samc20", "SAM C20N17A",  128*1024 },
+  { 0x1100000a, "samc20", "SAM C20E18A",  256*1024 },
+  { 0x11000005, "samc20", "SAM C20G18A",  256*1024 },
+  { 0x11000000, "samc20", "SAM C20J18A",  256*1024 },
+  { 0x1100000f, "samc20", "SAM C20J18AU", 256*1024 },
+  { 0x11001020, "samc20", "SAM C20N18A",  256*1024 },
+
+  { 0x1101000d, "samc21", "SAM C21E15A",   32*1024 },
+  { 0x11010008, "samc21", "SAM C21G15A",   32*1024 },
+  { 0x11010003, "samc21", "SAM C21J15A",   32*1024 },
+  { 0x1101000c, "samc21", "SAM C21E16A",   64*1024 },
+  { 0x11010007, "samc21", "SAM C21G16A",   64*1024 },
+  { 0x11010002, "samc21", "SAM C21J16A",   64*1024 },
+  { 0x1101000b, "samc21", "SAM C21E17A",  128*1024 },
+  { 0x11010006, "samc21", "SAM C21G17A",  128*1024 },
+  { 0x11010001, "samc21", "SAM C21J17A",  128*1024 },
+  { 0x11010010, "samc21", "SAM C21J17AU", 128*1024 },
+  { 0x11011021, "samc21", "SAM C21N17A",  128*1024 },
   { 0x1101000a, "samc21", "SAM C21E18A",  256*1024 },
+  { 0x11010005, "samc21", "SAM C21G18A",  256*1024 },
+  { 0x11010000, "samc21", "SAM C21J18A",  256*1024 },
+  { 0x1101000f, "samc21", "SAM C21J18AU", 256*1024 },
   { 0x11011020, "samc21", "SAM C21N18A",  256*1024 },
-  { 0x11011000, "samc21", "SAM C21N18A (ES)",  256*1024 },
 
+  { 0x1081001b, "saml21", "SAM L21E16B",  64*1024 },
   { 0x1081001a, "saml21", "SAM L21E17B",  128*1024 },
   { 0x10810019, "saml21", "SAM L21E18B",  256*1024 },
   { 0x10810000, "saml21", "SAM L21J18A",  256*1024 },
@@ -164,10 +209,28 @@ static device_t devices[] =
 
   { 0x10011064, "samda1", "SAM DA1J16B",   64*1024 },
 
-  { 0x11070000, "pic32cm", "PIC32CM1216MC00032",   128*1024 },
-  { 0x11070001, "pic32cm", "PIC32CM6408MC00032",    64*1024 },
-  { 0x11070006, "pic32cm", "PIC32CM1216MC00048",   128*1024 },
-  { 0x11070007, "pic32cm", "PIC32CM6408MC00048",    64*1024 },
+  { 0x11070000, "pic32cm_mc", "PIC32CM1216MC00032", 128*1024 },
+  { 0x11070001, "pic32cm_mc", "PIC32CM6408MC00032",  64*1024 },
+  { 0x11070006, "pic32cm_mc", "PIC32CM1216MC00048", 128*1024 },
+  { 0x11070007, "pic32cm_mc", "PIC32CM6408MC00048",  64*1024 },
+
+  { 0x1106000e, "pic32cm_jh", "PIC32CM5164JH00100", 512*1024 },
+  { 0x1106000f, "pic32cm_jh", "PIC32CM5164JH00064", 512*1024 },
+  { 0x11060014, "pic32cm_jh", "PIC32CM5164JH00048", 512*1024 },
+  { 0x11060015, "pic32cm_jh", "PIC32CM5164JH00032", 512*1024 },
+  { 0x1106000d, "pic32cm_jh", "PIC32CM2532JH00100", 256*1024 },
+  { 0x11060010, "pic32cm_jh", "PIC32CM2532JH00064", 256*1024 },
+  { 0x11060013, "pic32cm_jh", "PIC32CM2532JH00048", 256*1024 },
+  { 0x11060016, "pic32cm_jh", "PIC32CM2532JH00032", 256*1024 },
+
+  { 0x11060000, "pic32cm_jh", "PIC32CM5164JH01100", 512*1024 },
+  { 0x11060001, "pic32cm_jh", "PIC32CM5164JH01064", 512*1024 },
+  { 0x11060002, "pic32cm_jh", "PIC32CM5164JH01048", 512*1024 },
+  { 0x11060003, "pic32cm_jh", "PIC32CM5164JH01032", 512*1024 },
+  { 0x11060004, "pic32cm_jh", "PIC32CM2532JH01100", 256*1024 },
+  { 0x11060005, "pic32cm_jh", "PIC32CM2532JH01064", 256*1024 },
+  { 0x11060006, "pic32cm_jh", "PIC32CM2532JH01048", 256*1024 },
+  { 0x11060007, "pic32cm_jh", "PIC32CM2532JH01032", 256*1024 },
 };
 
 static device_t target_device;

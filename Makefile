@@ -4,6 +4,7 @@ UNAME ?= $(shell uname)
 SRCS = \
   dap.c \
   edbg.c \
+  utils.c \
   target.c \
   target_atmel_cm0p.c \
   target_atmel_cm3.c \
@@ -15,11 +16,14 @@ SRCS = \
   target_gd_gd32f4xx.c \
   target_nu_m480.c \
   target_lattice_lcmxo2.c \
+  target_rpi_rp2040.c \
+  target_puya_py32f0.c \
 
 HDRS = \
   dap.h \
   dbg.h \
   edbg.h \
+  utils.h \
   target.h
 
 ifeq ($(UNAME), Linux)
@@ -34,12 +38,10 @@ else
     LIBS += -framework Foundation
     LIBS += -framework CoreFoundation
     LIBS += -framework Cocoa
-    LIBS += $(shell pkg-config --libs hidapi)
-    CFLAGS += $(shell pkg-config --cflags hidapi)
   else
     BIN = edbg.exe
     SRCS += dbg_win.c
-    LIBS += -lhid -lsetupapi
+    LIBS += -lhid -lwinusb -lsetupapi
   endif
 endif
 

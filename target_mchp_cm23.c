@@ -1,30 +1,5 @@
-/*
- * Copyright (c) 2018-2019, Alex Taradov <alex@taradov.com>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2018-2024, Alex Taradov <alex@taradov.com>. All rights reserved.
 
 /*- Includes ----------------------------------------------------------------*/
 #include <unistd.h>
@@ -33,6 +8,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "target.h"
+#include "utils.h"
 #include "edbg.h"
 #include "dap.h"
 
@@ -122,15 +98,34 @@ typedef struct
   char      *name;
   uint32_t  flash_size;
   bool      trust_zone;
+  int       crc_offset;
 } device_t;
 
 /*- Variables ---------------------------------------------------------------*/
 static device_t devices[] =
 {
-  { 0x20840003, "saml10", "SAM L10D16A",  64*1024, false },
-  { 0x20840000, "saml10", "SAM L10E16A",  64*1024, false },
-  { 0x20830003, "saml11", "SAM L11D16A",  64*1024, true  },
-  { 0x20830000, "saml11", "SAM L11E16A",  64*1024, true  },
+  { 0x20840003, "saml10", "SAM L10D16A",  64*1024, false, 28 },
+  { 0x20840000, "saml10", "SAM L10E16A",  64*1024, false, 28 },
+  { 0x20830003, "saml11", "SAM L11D16A",  64*1024, true,  28 },
+  { 0x20830000, "saml11", "SAM L11E16A",  64*1024, true,  28 },
+
+  { 0x20850000, "pic32cm_le", "PIC32CM5164LE00100", 512*1024, false, 32 },
+  { 0x20850001, "pic32cm_le", "PIC32CM5164LE00064", 512*1024, false, 32 },
+  { 0x20850002, "pic32cm_le", "PIC32CM5164LE00048", 512*1024, false, 32 },
+  { 0x20850004, "pic32cm_le", "PIC32CM2532LE00100", 256*1024, false, 32 },
+  { 0x20850005, "pic32cm_le", "PIC32CM2532LE00064", 256*1024, false, 32 },
+  { 0x20850006, "pic32cm_le", "PIC32CM2532LE00048", 256*1024, false, 32 },
+
+  { 0x20860000, "pic32cm_ls", "PIC32CM5164LS00100", 512*1024, true,  32 },
+  { 0x20860001, "pic32cm_ls", "PIC32CM5164LS00064", 512*1024, true,  32 },
+  { 0x20860002, "pic32cm_ls", "PIC32CM5164LS00048", 512*1024, true,  32 },
+  { 0x20860004, "pic32cm_ls", "PIC32CM2532LS00100", 256*1024, true,  32 },
+  { 0x20860005, "pic32cm_ls", "PIC32CM2532LS00064", 256*1024, true,  32 },
+  { 0x20860006, "pic32cm_ls", "PIC32CM2532LS00048", 256*1024, true,  32 },
+
+  { 0x20870000, "pic32cm_ls", "PIC32CM5164LS60100", 512*1024, true,  32 },
+  { 0x20870001, "pic32cm_ls", "PIC32CM5164LS60064", 512*1024, true,  32 },
+  { 0x20870002, "pic32cm_ls", "PIC32CM5164LS60048", 512*1024, true,  32 },
 };
 
 static device_t target_device;
@@ -173,7 +168,7 @@ static int bootrom_expect(int status)
   uint32_t v;
   int i, res;
 
-  for (i = 1000; i > 0; i--)
+  for (i = 10000; i > 0; i--)
   {
     if (dap_read_byte(DSU_STATUSB) & DSU_STATUSB_BCCD1)
       break;
@@ -280,7 +275,7 @@ static void target_erase(void)
   if (dap_read_byte(DSU_STATUSB) & DSU_STATUSB_BCCD1)
   {
     uint32_t status = dap_read_word(DSU_BCC1);
-    error_exit("BootROM indicated an error (STATUS = 0x%08x)", status);
+    warning("BootROM indicated an error (STATUS = 0x%08x), still trying to erase", status);
   }
   else
   {
@@ -427,9 +422,9 @@ static int target_fuse_read(int section, uint8_t *data)
 {
   uint32_t addr = 0;
 
-  if (0 == section)
+  if (0 == section || 2 == section)
     addr = USER_ROW_ADDR;
-  else if (1 == section)
+  else if (1 == section || 3 == section)
     addr = BOCOR_ROW_ADDR;
   else
     return 0;
@@ -446,12 +441,40 @@ static void target_fuse_write(int section, uint8_t *data)
 {
   uint32_t addr = 0;
 
-  check(section < 2, "internal: incorrect section index in target_fuse_write()");
-
   if (0 == section)
+  {
+    uint32_t crc = crc32(&data[8], target_device.crc_offset-8);
+
+    data[target_device.crc_offset + 0] = crc;
+    data[target_device.crc_offset + 1] = crc >> 8;
+    data[target_device.crc_offset + 2] = crc >> 16;
+    data[target_device.crc_offset + 3] = crc >> 24;
+
     addr = USER_ROW_ADDR;
-  else
+  }
+  else if (1 == section)
+  {
+    uint32_t crc = crc32(data, 8);
+
+    data[8]  = crc;
+    data[9]  = crc >> 8;
+    data[10] = crc >> 16;
+    data[11] = crc >> 24;
+
+    sha256(data, FLASH_ROW_SIZE-32, &data[FLASH_ROW_SIZE-32]);
+
     addr = BOCOR_ROW_ADDR;
+  }
+  else if (2 == section)
+  {
+    addr = USER_ROW_ADDR;
+  }
+  else if (3 == section)
+  {
+    addr = BOCOR_ROW_ADDR;
+  }
+  else
+    error_exit("internal: incorrect section index in target_fuse_write()");
 
   bootrom_park();
 
@@ -475,9 +498,11 @@ static char *target_enumerate(int i)
 //-----------------------------------------------------------------------------
 static char target_help[] =
   "Fuses:\n"
-  "  This device has two fuses sections:\n"
-  "   - Section 0 represents a complete User Row (256 bytes)\n"
-  "   - Section 1 represents a complete BOCOR Row (256 bytes)\n";
+  "  This device has two fuse sections (256 bytes each) represented by the following indexes:\n"
+  "    0 - User Row, update CRC\n"
+  "    1 - Boot Configuration Row, update CRC and hash\n"
+  "    2 - User Row, update only specified data\n"
+  "    3 - Boot Configuration, update only specified data\n";
 
 //-----------------------------------------------------------------------------
 target_ops_t target_mchp_cm23_ops =
@@ -495,4 +520,5 @@ target_ops_t target_mchp_cm23_ops =
   .enumerate = target_enumerate,
   .help      = target_help,
 };
+
 

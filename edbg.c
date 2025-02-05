@@ -1,30 +1,5 @@
-/*
- * Copyright (c) 2013-2019, Alex Taradov <alex@taradov.com>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2013-2024, Alex Taradov <alex@taradov.com>. All rights reserved.
 
 /*- Includes ----------------------------------------------------------------*/
 #include <time.h>
@@ -59,6 +34,7 @@ static const struct option long_options[] =
 {
   { "help",      no_argument,        0, 'h' },
   { "verbose",   no_argument,        0, 'b' },
+  { "version",   required_argument,  0, 'd' },
   { "reset",     required_argument,  0, 'x' },
   { "erase",     no_argument,        0, 'e' },
   { "program",   no_argument,        0, 'p' },
@@ -77,14 +53,15 @@ static const struct option long_options[] =
   { 0, 0, 0, 0 }
 };
 
-static const char *short_options = "hbx:epvkurf:t:ls:c:o:z:F:";
+static const char *short_options = "hbd:x:epvkurf:t:ls:c:o:z:F:";
 
 /*- Variables ---------------------------------------------------------------*/
 static char *g_serial = NULL;
-static bool g_list = false;
+static bool g_list    = false;
 static char *g_target = NULL;
 static bool g_verbose = false;
-static long g_clock = 16000000;
+static int  g_version = -1;
+static long g_clock   = 16000000;
 static bool g_debugger_open = false;
 
 static target_options_t g_target_options =
@@ -144,50 +121,26 @@ void warning(char *fmt, ...)
 }
 
 //-----------------------------------------------------------------------------
-static void disconnect_debugger(void)
-{
-  if (!g_debugger_open)
-    return;
-
-  g_debugger_open = false;
-
-  dap_led(0, 0);
-  dap_disconnect();
-  dbg_close();
-}
-
-//-----------------------------------------------------------------------------
 void check(bool cond, char *fmt, ...)
 {
-  static bool check_failed = false;
-
-  if (check_failed)
+  if (cond)
     return;
 
-  if (!cond)
-  {
-    va_list args;
+  va_list args;
 
-    check_failed = true;
+  va_start(args, fmt);
+  fprintf(stderr, "Error: ");
+  vfprintf(stderr, fmt, args);
+  fprintf(stderr, "\n");
+  va_end(args);
 
-    disconnect_debugger();
-
-    va_start(args, fmt);
-    fprintf(stderr, "Error: ");
-    vfprintf(stderr, fmt, args);
-    fprintf(stderr, "\n");
-    va_end(args);
-
-    exit(1);
-  }
+  exit(1);
 }
 
 //-----------------------------------------------------------------------------
 void error_exit(char *fmt, ...)
 {
   va_list args;
-
-  disconnect_debugger();
 
   va_start(args, fmt);
   fprintf(stderr, "Error: ");
@@ -201,7 +154,6 @@ void error_exit(char *fmt, ...)
 //-----------------------------------------------------------------------------
 void perror_exit(char *text)
 {
-  disconnect_debugger();
   perror(text);
   exit(1);
 }
@@ -347,6 +299,14 @@ static void print_debugger_info(debugger_t *debugger)
   if (buf[0] & DAP_CAP_JTAG)
     strcat(str, "J");
 
+  strcat(str, ", ");
+
+  if (debugger->versions & DBG_CMSIS_DAP_V1)
+    strcat(str, "1");
+
+  if (debugger->versions & DBG_CMSIS_DAP_V2)
+    strcat(str, "2");
+
   strcat(str, ")\n");
 
   verbose(str);
@@ -372,6 +332,14 @@ static void print_clock_freq(int freq)
   }
 
   verbose("Clock frequency: %.1f %s\n", value, unit);
+}
+
+//-----------------------------------------------------------------------------
+static void disconnect_debugger(void)
+{
+  dap_led(0, 0);
+  dap_disconnect();
+  dbg_close();
 }
 
 //-----------------------------------------------------------------------------
@@ -406,6 +374,7 @@ static void print_help(char *name)
       "Options:\n"
       "  -h, --help                 print this help message and exit\n"
       "  -b, --verbose              print verbose messages\n"
+      "  -d, --version <version>    use a specified CMSIS-DAP version (default is best available)\n"
       "  -x, --reset <duration>     assert the reset pin before any other operation (duration in ms)\n"
       "  -e, --erase                perform a chip erase before programming\n"
       "  -p, --program              program the chip\n"
@@ -485,6 +454,7 @@ static void parse_command_line(int argc, char **argv)
       case 's': g_serial = optarg; break;
       case 'c': g_clock = strtoul(optarg, NULL, 0) * 1000; break;
       case 'b': g_verbose = true; break;
+      case 'd': g_version = strtoul(optarg, NULL, 0); break;
       case 'o': g_target_options.offset = (uint32_t)strtoul(optarg, NULL, 0); break;
       case 'z': g_target_options.size = (uint32_t)strtoul(optarg, NULL, 0); break;
       case 'F': g_target_options.fuse_cmd = optarg; break;
@@ -504,7 +474,7 @@ static void parse_command_line(int argc, char **argv)
 //-----------------------------------------------------------------------------
 int main(int argc, char **argv)
 {
-  debugger_t debuggers[MAX_DEBUGGERS];
+  debugger_t debuggers[MAX_DEBUGGERS] = {0};
   int n_debuggers = 0;
   int debugger = -1;
   target_ops_t *target_ops;
@@ -528,8 +498,20 @@ int main(int argc, char **argv)
   if (g_list)
   {
     message("Attached debuggers:\n");
+
     for (int i = 0; i < n_debuggers; i++)
-      message("  %d: %s - %s %s\n", i, debuggers[i].serial, debuggers[i].manufacturer, debuggers[i].product);
+    {
+      char ver[8] = "";
+
+      if (debuggers[i].versions & DBG_CMSIS_DAP_V1)
+        strcat(ver, "1");
+
+      if (debuggers[i].versions & DBG_CMSIS_DAP_V2)
+        strcat(ver, "2");
+
+      message("  %d: %s - %s %s (%s)\n", i, debuggers[i].serial, debuggers[i].manufacturer, debuggers[i].product, ver);
+    }
+
     return 0;
   }
 
@@ -576,11 +558,24 @@ int main(int argc, char **argv)
   else if (n_debuggers > 1 && -1 == debugger)
     error_exit("more than one debugger found, please specify a serial number");
 
-  dbg_open(&debuggers[debugger]);
+  if (-1 == g_version)
+    g_version = (debuggers[debugger].versions & DBG_CMSIS_DAP_V2) ? DBG_CMSIS_DAP_V2 : DBG_CMSIS_DAP_V1;
+  else if (1 == g_version)
+    g_version = DBG_CMSIS_DAP_V1;
+  else if (2 == g_version)
+    g_version = DBG_CMSIS_DAP_V2;
+  else
+    error_exit("unsupported CMSIS-DAP version: %d", g_version);
+
+  if (0 == (g_version & debuggers[debugger].versions))
+    error_exit("selected debugger does not support this CMSIS-DAP version");
+
+  dbg_open(&debuggers[debugger], g_version);
 
   g_debugger_open = true;
 
   print_debugger_info(&debuggers[debugger]);
+  verbose("Using CMSIS-DAP v%d\n", (DBG_CMSIS_DAP_V1 == g_version) ? 1 : 2);
   print_clock_freq(g_clock);
 
   reconnect_debugger();
